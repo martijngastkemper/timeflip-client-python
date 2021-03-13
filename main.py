@@ -1,10 +1,12 @@
 import asyncio
 
 from bleak import BleakClient
-from bleak import _logger as logger
 
-PASSWORD_UUID = "F1196F57-71A4-11E6-BDF4-0800200C9A66"
+clientCalibrationVersion = b'\x00\x00\x00\x01';
+
+CALIBRATION_UUID = "F1196F56-71A4-11E6-BDF4-0800200C9A66"
 FACET_UUID = "F1196F52-71A4-11E6-BDF4-0800200C9A66"
+PASSWORD_UUID = "F1196F57-71A4-11E6-BDF4-0800200C9A66"
 
 facetDictionary = {
     2: "Fork and knife",
@@ -44,6 +46,11 @@ async def run(address):
 
         await client.write_gatt_char(PASSWORD_UUID, bytearray('000000', 'utf-8'))
         await client.start_notify(FACET_UUID, facet_handler)
+
+        serverCalibrationVersion = await client.read_gatt_char(CALIBRATION_UUID)
+        if serverCalibrationVersion != clientCalibrationVersion:
+            """ TODO reset facet calibration """
+            await client.write_gatt_char(CALIBRATION_UUID, clientCalibrationVersion)
 
         while await client.is_connected():
             await asyncio.sleep(1)
