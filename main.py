@@ -1,4 +1,5 @@
 import asyncio
+import timed_input
 
 from bleak import BleakClient
 
@@ -8,20 +9,7 @@ CALIBRATION_UUID = "F1196F56-71A4-11E6-BDF4-0800200C9A66"
 FACET_UUID = "F1196F52-71A4-11E6-BDF4-0800200C9A66"
 PASSWORD_UUID = "F1196F57-71A4-11E6-BDF4-0800200C9A66"
 
-facetDictionary = {
-    2: "Fork and knife",
-    17: "Television",
-    14: "Brush",
-    13: "Talk",
-    9: "Pencil",
-    7: "Shake hands",
-    10: "Rocket",
-    15: "Pauze",
-    11: "Gaming",
-    6: "Paw",
-    16: "Lighting",
-    12: "Dumble"
-}
+facetDictionary = {}
 
 async def run(address):
     async with BleakClient(address) as client:
@@ -30,12 +18,11 @@ async def run(address):
                 loop.create_task(handle_error("Facet data is empty probable wrong password."))
                 return
 
-            """ Stop when fork and knife is up """
-            if data[0] == 2:
-                loop.create_task(client.disconnect())
-
             icon = facetDictionary.get(data[0])
-            loop.create_task(print_icon(icon))
+            if icon is None:
+                loop.create_task(calibrate_facet(data[0]))
+            else:
+                loop.create_task(print_icon(icon))
 
         async def handle_error(message):
             print("An error occurred, disconnecting: {0}".format(message))
@@ -47,10 +34,14 @@ async def run(address):
         await client.write_gatt_char(PASSWORD_UUID, bytearray('000000', 'utf-8'))
         await client.start_notify(FACET_UUID, facet_handler)
 
-        serverCalibrationVersion = await client.read_gatt_char(CALIBRATION_UUID)
-        if serverCalibrationVersion != clientCalibrationVersion:
+        server_calibration_version = await client.read_gatt_char(CALIBRATION_UUID)
+        if server_calibration_version != clientCalibrationVersion:
             """ TODO reset facet calibration """
             await client.write_gatt_char(CALIBRATION_UUID, clientCalibrationVersion)
+
+        async def calibrate_facet(facetId):
+            icon_name = await timed_input.timed_input("Which icon do you see? ", 5)
+            facetDictionary[facetId] = icon_name
 
         while await client.is_connected():
             await asyncio.sleep(1)
