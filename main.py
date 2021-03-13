@@ -1,23 +1,48 @@
 import asyncio
 import timed_input
+import os
 import pickle
 
 from bleak import BleakClient
 
 clientCalibrationVersion = b'\x00\x00\x00\x01';
 
+FACET_DICTIONARY_FILE = "facet.dictionary"
+
 CALIBRATION_UUID = "F1196F56-71A4-11E6-BDF4-0800200C9A66"
 FACET_UUID = "F1196F52-71A4-11E6-BDF4-0800200C9A66"
 PASSWORD_UUID = "F1196F57-71A4-11E6-BDF4-0800200C9A66"
 
-with open('facet.dictionary', 'r+b') as handler:
-    try:
-        facetDictionary = pickle.load(handler)
-    except EOFError:
-        facetDictionary = {}
+try:
+    with open(FACET_DICTIONARY_FILE, 'r+b') as handler:
+        try:
+            facetDictionary = pickle.load(handler)
+        except EOFError:
+            facetDictionary = {}
+except FileNotFoundError:
+    open(FACET_DICTIONARY_FILE, 'w')
+    facetDictionary = {}
 
 async def run(address):
     async with BleakClient(address) as client:
+        """ Authorize this client with the Timeflip server password """
+        await client.write_gatt_char(PASSWORD_UUID, bytearray('000000', 'utf-8'))
+
+        """ Set calibration version after Timeflip reset """
+        server_calibration_version = await client.read_gatt_char(CALIBRATION_UUID)
+        if server_calibration_version != clientCalibrationVersion:
+            os.remove(FACET_DICTIONARY_FILE)
+            await client.write_gatt_char(CALIBRATION_UUID, clientCalibrationVersion)
+
+        """ Handle uncalibrated facet """
+        async def calibrate_facet(facetId):
+            icon_name = await timed_input.timed_input("Which icon do you see? ", 5)
+            facetDictionary[facetId] = icon_name
+            loop.create_task(print_icon(icon_name))
+            with open(FACET_DICTIONARY_FILE, 'w+b') as handler:
+                pickle.dump(facetDictionary, handler)
+
+        """ Handle facet change """
         def facet_handler(sender, data):
             if data == b'':
                 loop.create_task(handle_error("Facet data is empty probable wrong password."))
@@ -36,19 +61,7 @@ async def run(address):
         async def print_icon(icon):
             print("Icon {0} is now up".format(icon))
 
-        await client.write_gatt_char(PASSWORD_UUID, bytearray('000000', 'utf-8'))
         await client.start_notify(FACET_UUID, facet_handler)
-
-        server_calibration_version = await client.read_gatt_char(CALIBRATION_UUID)
-        if server_calibration_version != clientCalibrationVersion:
-            """ TODO reset facet calibration """
-            await client.write_gatt_char(CALIBRATION_UUID, clientCalibrationVersion)
-
-        async def calibrate_facet(facetId):
-            icon_name = await timed_input.timed_input("Which icon do you see? ", 5)
-            facetDictionary[facetId] = icon_name
-            with open('facet.dictionary', 'w+b') as handler:
-                pickle.dump(facetDictionary, handler)
 
         while await client.is_connected():
             await asyncio.sleep(1)
