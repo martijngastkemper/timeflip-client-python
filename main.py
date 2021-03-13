@@ -1,5 +1,6 @@
 import asyncio
 import timed_input
+import pickle
 
 from bleak import BleakClient
 
@@ -9,7 +10,11 @@ CALIBRATION_UUID = "F1196F56-71A4-11E6-BDF4-0800200C9A66"
 FACET_UUID = "F1196F52-71A4-11E6-BDF4-0800200C9A66"
 PASSWORD_UUID = "F1196F57-71A4-11E6-BDF4-0800200C9A66"
 
-facetDictionary = {}
+with open('facet.dictionary', 'r+b') as handler:
+    try:
+        facetDictionary = pickle.load(handler)
+    except EOFError:
+        facetDictionary = {}
 
 async def run(address):
     async with BleakClient(address) as client:
@@ -42,6 +47,8 @@ async def run(address):
         async def calibrate_facet(facetId):
             icon_name = await timed_input.timed_input("Which icon do you see? ", 5)
             facetDictionary[facetId] = icon_name
+            with open('facet.dictionary', 'w+b') as handler:
+                pickle.dump(facetDictionary, handler)
 
         while await client.is_connected():
             await asyncio.sleep(1)
