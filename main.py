@@ -23,16 +23,21 @@ facetDictionary = {
 
 async def run(address):
     async with BleakClient(address) as client:
-        x = await client.is_connected()
-        logger.info("Connected: {0}".format(x))
-
         def facet_handler(sender, data):
+            if data == b'':
+                loop.create_task(handle_error("Facet data is empty probable wrong password."))
+                return
+
             """ Stop when fork and knife is up """
             if data[0] == 2:
                 loop.create_task(client.disconnect())
 
             icon = facetDictionary.get(data[0])
             loop.create_task(print_icon(icon))
+
+        async def handle_error(message):
+            print("An error occurred, disconnecting: {0}".format(message))
+            loop.create_task(client.disconnect())
 
         async def print_icon(icon):
             print("Icon {0} is now up".format(icon))
