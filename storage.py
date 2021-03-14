@@ -8,11 +8,11 @@ class Repository:
     def __init__(self):
         self.facet_dictionary = {}
 
-    def calibrate_facet(self, facet, icon):
+    def calibrate_facet(self, facet: int, icon: str):
         self.facet_dictionary[facet] = icon
         self.persist()
 
-    def get_icon(self, facet):
+    def get_icon(self, facet: int) -> str:
         print(self.facet_dictionary)
         return self.facet_dictionary.get(facet)
 
