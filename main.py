@@ -10,7 +10,7 @@ load_dotenv()
 
 clientCalibrationVersion = b'\x00\x00\x00\x01'
 
-productive = productive.Productive(os.getenv('PRODUCTIVE_TOKEN'), os.getenv('PRODUCTIVE_ORIGANIZATION_ID'))
+productive = productive.Productive(os.getenv('PRODUCTIVE_TOKEN'), os.getenv('PRODUCTIVE_ORGANIZATION_ID'))
 
 storage = storage.Repository()
 storage.load()
