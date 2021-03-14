@@ -13,7 +13,6 @@ class Repository:
         self.persist()
 
     def get_icon(self, facet: int) -> str:
-        print(self.facet_dictionary)
         return self.facet_dictionary.get(facet)
 
     def load(self):

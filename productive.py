@@ -12,12 +12,12 @@ class Productive:
             'X-Auth-Token': api_token,
             'X-Organization-Id': organization_id,
         }
-        self.today = '2021-03-10'
 
     def time_entries(self):
         r = requests.get(
             "{0}time_entries?filter[person_id]={1}&filter[before]={2}&filter[after]={2}".format(self.base_url,
-                                                                                       self.person_id, self.now),
+                                                                                                self.person_id,
+                                                                                                self.today),
             headers=self.headers)
 
         data = r.json().get("data")
@@ -52,17 +52,9 @@ class Productive:
 
     @cached_property
     def person_id(self):
-        print(self.headers)
         r = requests.get("{0}organization_memberships".format(self.base_url), headers=self.headers)
         return r.json().get('data')[0]['relationships']['person']['data']['id']
 
     @cached_property
-    def now(self):
+    def today(self):
         return date.today().strftime("%Y-%m-%d")
-
-# api = Productive()
-#
-# print(api.time_entries())
-# print(api.time_entries())
-#
-# api.start_time_entry('6336597')
