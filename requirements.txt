@@ -3,3 +3,6 @@ pyobjc-core==7.1
 pyobjc-framework-Cocoa==7.1
 pyobjc-framework-CoreBluetooth==7.1
 pyobjc-framework-libdispatch==7.1
+
+requests~=2.25.1
+python-dotenv~=0.15.0

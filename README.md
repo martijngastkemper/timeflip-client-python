@@ -8,6 +8,10 @@ The goal with this client is to connect Timeflip with Productive. To easily whic
 
 Install Python 3 and check out the source.
 
+`cp .env.example .env`
+
+Add the Productive API token to .env
+
 Run `python main.py`.
 
 ## Timeflip docs
