@@ -2,7 +2,8 @@ import asyncio
 from bleak import BleakClient
 from dotenv import load_dotenv
 import os
-import productive
+from productive import Productive
+from productive import TimeEntry
 import storage
 import timed_input
 
@@ -10,7 +11,7 @@ load_dotenv()
 
 clientCalibrationVersion = b'\x00\x00\x00\x01'
 
-productive = productive.Productive(os.getenv('PRODUCTIVE_TOKEN'), os.getenv('PRODUCTIVE_ORGANIZATION_ID'))
+productive = Productive(os.getenv('PRODUCTIVE_TOKEN'), os.getenv('PRODUCTIVE_ORGANIZATION_ID'))
 
 storage = storage.Repository()
 storage.load()
@@ -52,13 +53,15 @@ async def run():
         def time_entries_to_option_list(time_entries):
             output = "Pick a task to assign to this icon:\n"
             for k, time_entry in enumerate(time_entries):
-                output = output + "{0}) {1}\n".format(k, time_entry['description'])
+                output = output + "{0}) {1}\n".format(k, time_entry.description)
             return output.rstrip("\n")
 
         def facet_handler(sender, data):
             if data == b'':
                 loop.create_task(handle_error("Facet data is empty probable wrong password."))
                 return
+
+            loop.create_task(print_update("Facet changed"))
 
             time_entry = storage.get_time_entry(data[0])
             if time_entry is None:
@@ -70,14 +73,13 @@ async def run():
             print("An error occurred, disconnecting: {0}".format(message))
             loop.create_task(client.disconnect())
 
-        async def show_started_time_entry(time_entry: dict):
-            print("Starting '{0}'".format(time_entry["description"]))
+        async def show_started_time_entry(time_entry: TimeEntry):
+            print("Started '{0}'".format(time_entry.description))
 
-        async def start_time_entry(time_entry):
+        async def start_time_entry(time_entry: TimeEntry):
             stopped_time_entry = productive.stop_time_entry()
-            print(stopped_time_entry)
-            if stopped_time_entry != "":
-                loop.create_task(print_update("Time entry '{0}' stopped".format(stopped_time_entry)))
+            if stopped_time_entry is not None:
+                loop.create_task(print_update("Stopped '{0}'".format(stopped_time_entry.description)))
 
             productive.start_time_entry(time_entry)
             loop.create_task(show_started_time_entry(time_entry))

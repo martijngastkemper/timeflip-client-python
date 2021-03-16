@@ -1,4 +1,5 @@
 import pickle
+from productive import TimeEntry
 
 FACET_DICTIONARY_FILE = "facet.dictionary"
 
@@ -8,11 +9,11 @@ class Repository:
     def __init__(self):
         self.facet_dictionary = {}
 
-    def calibrate_facet(self, facet: int, time_entry: dict):
+    def calibrate_facet(self, facet: int, time_entry: TimeEntry):
         self.facet_dictionary[facet] = time_entry
         self.persist()
 
-    def get_time_entry(self, facet: int) -> dict:
+    def get_time_entry(self, facet: int) -> TimeEntry:
         return self.facet_dictionary.get(facet)
 
     def load(self):

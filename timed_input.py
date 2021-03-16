@@ -38,7 +38,7 @@ async def timed_input(prompt, timeout=0):
     except asyncio.TimeoutError:
         # Make sure that any output to stdout or stderr that happens following
         # this coroutine, happens on a new line.
-        sys.stdout.write('\n')
+        sys.stdout.write('Too late!\n')
         sys.stdout.flush()
 
     finally:
