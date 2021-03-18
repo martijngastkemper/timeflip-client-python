@@ -1,5 +1,6 @@
 import asyncio
 from bleak import BleakClient
+from datetime import datetime
 from dotenv import load_dotenv
 import facet_action
 import os
@@ -10,7 +11,7 @@ import time_entry_picker
 
 load_dotenv()
 
-clientCalibrationVersion = b'\x00\x00\x00\x01'
+clientCalibrationVersion = datetime.now().strftime("%d%m").encode()
 
 productive = Productive(os.getenv('PRODUCTIVE_TOKEN'), os.getenv('PRODUCTIVE_ORGANIZATION_ID'))
 
