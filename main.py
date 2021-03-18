@@ -85,6 +85,9 @@ async def run():
 
         loop.create_task(print_update("Connected with Timeflip"))
 
+        """ This read action triggers a notify"""
+        await client.read_gatt_char(FACET_UUID)
+
         while await client.is_connected():
             await asyncio.sleep(1)
 
