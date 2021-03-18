@@ -1,19 +1,33 @@
-import pickle
+from enum import Enum
 from productive import TimeEntry
+from typing import Union
+import pickle
 
 FACET_DICTIONARY_FILE = "facet.dictionary"
 
 
-class Repository:
+class Actions(Enum):
+    START = 'start'
+    STOP = 'stop'
+
+
+class FacetAction:
+
+    def __init__(self, action: Actions, time_entry: Union[None, TimeEntry]):
+        self.time_entry = time_entry
+        self.action = action
+
+
+class Storage:
 
     def __init__(self):
         self.facet_dictionary = {}
 
-    def calibrate_facet(self, facet: int, time_entry: TimeEntry):
-        self.facet_dictionary[facet] = time_entry
+    def add_facet_action(self, facet: int, facet_action: FacetAction):
+        self.facet_dictionary[facet] = facet_action
         self.persist()
 
-    def get_time_entry(self, facet: int) -> TimeEntry:
+    def get_facet_action(self, facet: int) -> FacetAction:
         return self.facet_dictionary.get(facet)
 
     def load(self):
